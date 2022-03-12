@@ -1,15 +1,30 @@
 const main = async () => {
-  const [deployer] = await hre.ethers.getSigners();
-  const accountBalance = await deployer.getBalance();
+  const myMessageContractFactory = await hre.ethers.getContractFactory(
+    'MyMessageContract'
+  );
+  const myMessageContract = await myMessageContractFactory.deploy({
+    value: hre.ethers.utils.parseEther('0.01'),
+  });
 
-  console.log('Deploying contracts with account: ', deployer.address);
-  console.log('Account balance: ', accountBalance.toString());
+  await myMessageContract.deployed();
 
-  const waveContractFactory = await hre.ethers.getContractFactory('WavePortal');
-  const waveContract = await waveContractFactory.deploy();
-  await waveContract.deployed();
+  console.log('MyMessageContract address: ', myMessageContract.address);
 
-  console.log('WavePortal contract address: ', waveContract.address);
+  let contractBalance = await hre.ethers.provider.getBalance(
+    myMessageContract.address
+  );
+  console.log(
+    'Contract balance:',
+    hre.ethers.utils.formatEther(contractBalance)
+  );
+
+  /*
+   * Let's try two message now
+   */
+  const messageTxn = await myMessageContract.message(
+    'This is message #1 from deployment script.'
+  );
+  await messageTxn.wait();
 };
 
 const runMain = async () => {
@@ -17,7 +32,7 @@ const runMain = async () => {
     await main();
     process.exit(0);
   } catch (error) {
-    console.log(error);
+    console.error(error);
     process.exit(1);
   }
 };
